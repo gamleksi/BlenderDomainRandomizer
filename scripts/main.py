@@ -7,7 +7,7 @@ import mathutils
 import numpy as np
 import bmesh
 
-random.seed(3)
+random.seed(9)
 
 cup_path ='/home/aleksi/hacks/thesis/code/render/objects/cup.obj'
 img_path = '/home/aleksi/hacks/thesis/code/render/test_images'
@@ -16,7 +16,6 @@ import sys
 import os
 sys.path.append(os.path.join(os.getcwd(), 'scripts'))
 from texture_random import intialize_textures, switch_to_random_textures
-
 
 
 def deselected_all():
@@ -30,6 +29,7 @@ def import_object(path, name, idx=0):
     obj.name = name
 
     return obj
+
 
 def remove_object(obj):
 
@@ -60,11 +60,6 @@ def render_save(img_path, index, depth=True, depth_name='depth', img_name='image
         invert = tree.nodes.new(type='CompositorNodeInvert')
         links.new(mapValue.outputs['Value'], invert.inputs['Color'])
 
-        # Visual Purpose
-        # viewer = tree.nodes.new(type='CompositorNodeViewer')
-        # viewer.use_alpha = False
-        # links.new(invert.outputs['Color'], viewer.inputs['Image'])
-
         depth_saver = tree.nodes.new(type='CompositorNodeOutputFile')
         depth_saver.base_path = img_path
         depth_saver.file_slots[0].path = '{}_{}_'.format(index, depth_name)
@@ -78,22 +73,13 @@ def render_save(img_path, index, depth=True, depth_name='depth', img_name='image
     bpy.ops.render.render(write_still=True)
 
 
-def scale_object(obj_name, vals=(1,1,1)):
-    x=vals[0]; y=vals[1]; z=vals[2]
-    bpy.ops.object[obj_name].scale = (x, y, z)
-
-
-def move_obj_to_location(obj_name, vals=(1,1,1)):
-    x=vals[0]; y=vals[1]; z=vals[2]
-    bpy.ops.object[obj_name].location = (x, y, z)
-
 
 def origin_to_lowest_point(obj):
     deselected_all()
     obj.select = True
 
     mw = obj.matrix_world      # Active object's world matrix
-    glob_vertex_coordinates = [ mw * v.co for v in obj.data.vertices ] # Global coordinates of vertices
+    glob_vertex_coordinates = [mw * v.co for v in obj.data.vertices ] # Global coordinates of vertices
 
     # Find the lowest Z value amongst the object's vertex
 
@@ -104,6 +90,7 @@ def origin_to_lowest_point(obj):
         if (mw * v.co).z == minZ:
             bpy.context.scene.cursor_location = mw * v.co
             bpy.ops.object.origin_set(type='ORIGIN_CURSOR')
+
     deselected_all()
 
 
@@ -114,7 +101,7 @@ def switch_origin(obj_name, max_point=True, coords=None):
     obj.select = True
 
     mw = obj.matrix_world      # Active object's world matrix
-    glob_vertex_coordinates = [ mw * v.co for v in obj.data.vertices ] # Global coordinates of vertices
+    glob_vertex_coordinates = [mw * v.co for v in obj.data.vertices] # Global coordinates of vertices
 
     # Find the lowest Z value amongst the object's vertex
 
@@ -137,7 +124,7 @@ def switch_origin(obj_name, max_point=True, coords=None):
     deselected_all()
 
 
-def set_parent(parent, child):
+def set_parent(parent, child, vertex_parenting=False):
 
     deselected_all()
 
@@ -146,7 +133,10 @@ def set_parent(parent, child):
 
     bpy.context.scene.objects.active = parent    #the active object will be the parent of all selected object
 
-    bpy.ops.object.parent_set()
+    if vertex_parenting:
+        bpy.ops.object.parent_set(type='VERTEX')
+    else:
+        bpy.ops.object.parent_set()
 
     deselected_all()
 
@@ -239,26 +229,40 @@ def split_object(obj, splitted_name, choose_edge=highest_edge):
 def separate_obj_material_ids(obj, splitted_name, material_id):
 
     split_object(obj, splitted_name)
-    inner = bpy.data.objects[splitted_name]
-    inner.pass_index = material_id
-    set_parent(obj, inner)
+    inner_part = bpy.data.objects[splitted_name]
+    inner_part.pass_index = material_id
+    set_parent(obj, inner_part)
 
 
 
-CUP_Y_LIM = (-3.8, 3.8)
-CUP_X_LIM = (-1.5, 1.5)
+DESK_SCALE = [2, 4]
 LAMP_Y_LIM = [-10, 10]
 LAMP_X_LIM = [-10, 10]
 LAMP_Z_LIM = [3, 10]
 NUM_LIGHTS = 10
+CUP_SCALE = [0.05, 0.24]
 
 
-def random_cup_position():
 
-    x = random.uniform(CUP_X_LIM[0], CUP_X_LIM[1])
-    y = random.uniform(CUP_Y_LIM[0], CUP_Y_LIM[1])
+def random_cup_position(cup):
+    desk_mw = np.array([bpy.data.objects['desk'].matrix_world])
+    corner_coords = desk_mw @ np.array([1, 1, 0, 1])
+    x_max = corner_coords[0][0] * 0.7
+    y_max = corner_coords[0][1] * 0.7
+    x = random.uniform(-x_max, x_max)
+    y = random.uniform(-y_max, y_max)
+    cup.location = (x, y, cup.location[2])
 
-    return (x, y)
+
+def random_desk_scale():
+    desk = bpy.data.objects['desk']
+    desk.scale = (random.uniform(DESK_SCALE[0], DESK_SCALE[1]), random.uniform(DESK_SCALE[0], DESK_SCALE[1]),
+                  desk.scale[2])
+
+
+def random_cup_scale(cup):
+    scale = random.uniform(CUP_SCALE[0], CUP_SCALE[1])
+    cup.scale = (scale, scale, scale)
 
 
 def random_lamp_position():
@@ -268,6 +272,36 @@ def random_lamp_position():
     z = random.uniform(LAMP_Z_LIM[0], LAMP_Z_LIM[1])
 
     return (x, y, z)
+
+CAMERA_Z_UPPER_LIMIT = 8
+CAMERA_Z_UPPER_LIMIT = 8
+ANGLE_LIMIT = [0.75, 1.5]
+
+def random_camera_position():
+    # reset camera position
+    cup = bpy.data.objects['cup']
+    mw = cup.matrix_world
+    cup_coords = [np.array(mw * v.co) for v in cup.data.vertices] # Global coordinates of vertices
+    camera_coord = bpy.data.objects['Camera'].location
+    high_limit_idx = np.argmax([np.abs(coord[0] - camera_coord[0]) for coord in cup_coords])
+    high_limit_coord = cup_coords[high_limit_idx]
+    low_limit_idx = np.argmax([np.linalg.norm(high_limit_coord - coord) for coord in cup_coords])
+    low_limit_coord = cup_coords[low_limit_idx]
+    sample_z = random.uniform(high_limit_coord[2], CAMERA_Z_UPPER_LIMIT)
+    sample_theta = random.uniform(ANGLE_LIMIT[0], ANGLE_LIMIT[1])
+    h_fov = bpy.data.cameras['Camera'].angle_x
+    z_delta = sample_z - low_limit_coord[2]
+    x_low = low_limit_coord[0] + np.tan(sample_theta - h_fov/2) * (z_delta)
+    return x_low, sample_z, sample_theta
+
+def change_camera_position():
+    x, z, theta = random_camera_position()
+    camera_coord = bpy.data.objects['Camera'].location
+    camera_coord[0] = x
+    camera_coord[2] = z
+    bpy.data.objects['Camera'].rotation_euler[0] = theta
+
+
 
 
 def initialize_lamp(name):
@@ -282,15 +316,14 @@ def initialize_lamp(name):
     return lamp
 
 
-def initialize_material_ids():
+def initialize_material_ids(inner_name):
 
-    for obj in bpy.data.objects:
+    for obj in list(bpy.data.objects):
 
         if obj.name == 'cup':
             pass_index = 1
-
             # separate inside of a cup from  the outer part
-            separate_obj_material_ids(obj, 'cup_inner', 2)
+            separate_obj_material_ids(obj, inner_name, 2)
         else:
             pass_index = 0
 
@@ -305,6 +338,8 @@ def switch_to_labels():
 
         if hasattr(obj.data, 'materials'):
             obj.data.materials[0] = affordance_mat
+
+    bpy.data.scenes['Scene'].render.use_antialiasing = False
 
 
 def reset_camera_position():
@@ -321,45 +356,50 @@ def import_and_set_on_table(path, name):
     obj.scale = (0.15, 0.15, 0.15)
     desk = bpy.data.objects['desk']
     obj.location = (0, 0, desk.location[2])
-    set_parent(desk, obj)
+    set_parent(desk, obj, vertex_parenting=True)
 
     return obj
 
 
+def main():
 
-bpy.ops.object.select_all(action = 'DESELECT')
-bpy.ops.object.mode_set(mode="EDIT")
-bpy.ops.mesh.select_all(action = 'DESELECT')
-bpy.ops.object.mode_set(mode="OBJECT")
+    bpy.ops.object.select_all(action = 'DESELECT')
+    bpy.ops.object.mode_set(mode="EDIT")
+    bpy.ops.mesh.select_all(action='DESELECT')
+    bpy.ops.object.mode_set(mode="OBJECT")
 
-switch_origin('desk', coords=(0, 0))
+    switch_origin('desk', max_point=True, coords=(0, 0))
+    reset_camera_position()
 
-reset_camera_position()
-
-lamps = []
-cups = []
-
-cups.append(import_and_set_on_table(cup_path, 'cup'))
-
-random_textures = intialize_textures(['cup', 'desk', 'wall', 'floor', 'leg'])
-initialize_material_ids()
-
-for i in range(2):
-
-    # Random cup position
-    x, y = random_cup_position()
-    cups[0].location = (x, y, cups[0].location[2])
-
-    # Remove lamps
-    for l in lamps:
-        remove_object(l)
-
-    # Generate new lamps and their positions
     lamps = []
-    for j in range(random.randint(1, NUM_LIGHTS)):
-        lamps.append(initialize_lamp('lamp_{}'.format(j)))
+    cups = []
 
-    switch_to_random_textures(random_textures)
-    render_save(img_path, i, depth=True, img_name='random')
-    switch_to_labels()
-    #render_save(img_path, i, depth=False, img_name='affordance')
+    cups.append(import_and_set_on_table(cup_path, 'cup'))
+
+    cup_inner_name = 'inside_part'
+
+    initialize_material_ids(cup_inner_name)
+    random_textures = intialize_textures(['desk', 'wall', 'leg', 'floor', 'cup', cup_inner_name])
+
+    for i in range(1):
+
+        random_desk_scale()
+        random_cup_position(cups[0])
+        random_cup_scale(cups[0])
+
+        # Remove lamps
+        for l in lamps:
+            remove_object(l)
+
+        # Generate new lamps and their positions
+        lamps = []
+        for j in range(random.randint(1, NUM_LIGHTS)):
+            lamps.append(initialize_lamp('lamp_{}'.format(j)))
+
+        switch_to_random_textures(random_textures)
+        render_save(img_path, i, depth=True, img_name='random')
+        #switch_to_labels()
+        #render_save(img_path, i, depth=False, img_name='affordance')
+
+if __name__ == "__main__":
+    main()

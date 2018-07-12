@@ -18,15 +18,16 @@ def find_nodes(nodes, name):
     return result
 
 
+# hacky
 def find_objects(name):
     objs = []
     for obj in bpy.data.objects:
        if name in obj.name:
             objs.append(obj)
-    return objs #[bpy.data.objects[name]]
+    return objs
 
 
-class TextureRandomizer(object):
+class TextureHandler(object):
     def __init__(self, obj_name, displace=False):
         self.obj_name = obj_name
         self.displace = displace
@@ -138,30 +139,32 @@ class TextureRandomizer(object):
             self.random_translate(node)
 
 
-def intialize_textures(obj_names):
+class TextureRandomizer(object):
 
-    textures = []
+    def __init__(self, texture_class_names):
 
-    for name in obj_names:
+        self.textures = self.intialize_textures(texture_class_names)
 
-        displace = False
-        if 'wall' in name:
-            displace = True
+    def intialize_textures(self, texture_class_names):
 
-        textures.append(TextureRandomizer(name, displace=displace))
+        textures = []
 
-    return textures
+        for name in texture_class_names:
 
+            displace = False
+            if 'wall' in name:
+                displace = True
 
-def switch_to_random_textures(textures):
+            textures.append(TextureHandler(name, displace=displace))
 
-    for texture in textures:
-        texture.initialize_obj()
-        texture.random_all()
+        return textures
 
-    bpy.data.scenes['Scene'].render.use_antialiasing = True
+    def switch_and_randomize(self):
+
+        for texture in self.textures:
+            texture.initialize_obj()
+            texture.random_all()
 
 
 if __name__ == "__main__":
-    intialize_textures(['desk', 'wall1', 'wall2', 'wall3', 'leg1', 'leg2', 'leg3', 'leg4', 'floor'])
-
+    TextureRandomizer(['desk', 'wall1', 'wall2', 'wall3', 'leg1', 'leg2', 'leg3', 'leg4', 'floor'])

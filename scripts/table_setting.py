@@ -33,7 +33,7 @@ class TableSettingRandomizer(object):
         self.max_num_lamps = max_num_lamps
         self.random_lamps()
 
-        set_parent(self.cups[0], bpy.data.objects['Camera'])
+        #set_parent(self.cups[0], bpy.data.objects['Camera'])
 
 
 
@@ -44,7 +44,6 @@ class TableSettingRandomizer(object):
         for i in range(len(cup_names)):
 
             if hasattr(bpy.data.objects, cup_names[i]):
-                print('hello')
                 cups.append(bpy.data.objects[cup_names[i]])
             else:
                 cups.append(self.setup_cup_on_table(cup_paths[i], cup_names[i]))
@@ -127,3 +126,9 @@ class TableSettingRandomizer(object):
             cup.location = (x, y, cup.location[2])
             cup.rotation_euler[2] = 0 # for initializing camera position
 
+if __name__ == "__main__":
+
+    cup_names = ['cup_1']
+    inside_names = ['inside_1']
+    cup_path = ['/home/aleksi/hacks/thesis/code/render/objects/cup.obj']
+    setting_randomizer = TableSettingRandomizer(cup_names, inside_names, cup_path)

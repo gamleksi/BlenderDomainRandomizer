@@ -2,6 +2,21 @@ import bpy
 import bmesh
 import numpy as np
 
+from bpy_extras.object_utils import world_to_camera_view
+import mathutils
+
+def coordinate_within_image(coord):
+    coord = mathutils.Vector(coord)
+    scene = bpy.context.scene
+    cam = bpy.data.objects['Camera']
+    cs, ce = cam.data.clip_start, cam.data.clip_end
+    co_ndc = world_to_camera_view(scene, cam, coord)
+    within_image = False
+    if (0.0 < co_ndc.x < 1.0 and
+        0.0 < co_ndc.y < 1.0):
+        within_image = True
+    return within_image
+
 
 def initialize_environment():
     bpy.ops.object.select_all(action = 'DESELECT')
@@ -42,7 +57,10 @@ def import_object(path, name):
 
     deselected_all()
 
-    bpy.ops.import_scene.obj(filepath=path)
+    if path[-4:-1] == 'obj':
+        bpy.ops.import_scene.obj(filepath=path)
+    else:
+        bpy.ops.import_scene.off(filepath=path)
     obj = bpy.context.selected_objects[0]
     obj.name = name
 

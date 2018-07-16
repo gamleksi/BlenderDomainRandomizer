@@ -40,8 +40,12 @@ def main(steps, do_affordance=True):
 
     for i in range(steps):
 
-        setting_randomizer.randomize_all()
-        camera_randomizer.change_camera_position()
+        success = False
+
+        while not success:
+            setting_randomizer.randomize_all()
+            bpy.ops.wm.redraw_timer(type='DRAW', iterations=10)
+            success = camera_randomizer.change_camera_position()
 
         # Random Textures
         renderer.switch_to_random_textures()
@@ -53,4 +57,4 @@ def main(steps, do_affordance=True):
             renderer.render_save()
 
 if __name__ == "__main__":
-    main(1, do_affordance=False)
+    main(100, do_affordance=True)

@@ -2,6 +2,7 @@ import random
 import bpy
 import numpy as np
 import mathutils
+from bpy_extras.object_utils import world_to_camera_view
 
 CAMERA_Z_UPPER_LIMIT = 4
 CAMERA_X_LIMIT = [1.5, 6]
@@ -52,12 +53,7 @@ class CameraRandomizer(object):
         x_up = min(x_up, CAMERA_X_LIMIT[1])
         x_low = max(x_low, CAMERA_X_LIMIT[0])
 
-        if x_low > x_up:
-            return x_low, False
-        else:
-            print('x_low', x_low)
-            print('x_up', x_up)
-            return random.uniform(x_low, x_up), True
+        return random.uniform(x_low, x_up)
 
     def west_and_east_limits(self, cup_coords, camera_y):
         side1_idx = np.argmax([np.abs(coord[1] - camera_y) for coord in cup_coords])
@@ -74,11 +70,9 @@ class CameraRandomizer(object):
 
         return west_limit, east_limit
 
-    def sample_y_position(self, cup_coords, camera_coord, sample_x):
+    def sample_y_position(self, west_limit, east_limit, sample_x):
 
         vertical_camera_angle = bpy.data.cameras['Camera'].angle_x
-
-        west_limit, east_limit = self.west_and_east_limits(cup_coords, camera_coord[1])
 
         # west limit
         x_delta = sample_x - west_limit[0]
@@ -88,45 +82,92 @@ class CameraRandomizer(object):
         x_delta = sample_x - east_limit[0]
         y_east = east_limit[1] - np.tan(vertical_camera_angle/2) * x_delta
 
-        print('y_west', y_west)
-        print('y_east', y_east)
-
         return random.uniform(y_west, y_east)
 
-    def random_z_rotation(self):
-        self.parent_cup.rotation_euler[2] =random.uniform(-1, 1)
+    def random_z_rotation(self, view_angle, sample_y, sample_x, west_limit, east_limit):
+
+        # highest angle
+        delta_y = np.abs(sample_y - west_limit[1])
+        delta_x = np.abs(sample_x - west_limit[0])
+        theta = np.tan(delta_y/ delta_x)
+
+        if sample_y < west_limit[1]:
+            west_angle = view_angle/2 + theta
+        else:
+            west_angle = view_angle/2 - theta
+
+        # lowest angle
+        delta_y = np.abs(sample_y - east_limit[1])
+        delta_x = np.abs(sample_x - east_limit[0])
+        theta = np.tan(delta_y/ delta_x)
+
+        if sample_y < east_limit[1]:
+            east_angle = view_angle/2 - theta
+        else:
+            east_angle = view_angle/2 + theta
+
+        return np.pi/2 + random.uniform(-east_angle, west_angle)
+
 
     def reset_camera_position(self):
+        self.camera = bpy.data.objects['Camera']
+        self.parent_cup = bpy.data.objects['cup_1']
         self.camera.rotation_euler = mathutils.Vector([60, 0, 90]) * 2 * np.pi / 360
         self.camera.location = (8, 0, 6)
 
     def do_randomzation(self):
-        self.reset_camera_position()
 
+        self.reset_camera_position()
         cup = self.parent_cup
         mw = cup.matrix_world
         cup_coords = [np.array(mw * v.co) for v in cup.data.vertices] # Global coordinates of vertices
-
         camera_coord = self.camera.location
-        success = False
-        while not success:
+        north_limit = self.north_coord_limit(cup_coords, camera_coord)
+        south_limit = self.south_coord_limit(cup_coords, camera_coord)
+        west_limit, east_limit = self.west_and_east_limits(cup_coords, camera_coord[1])
 
-            north_limit = self.north_coord_limit(cup_coords, camera_coord)
-            south_limit = self.south_coord_limit(cup_coords, camera_coord)
-            sample_z = self.sample_z_position(north_limit[2])
-            # rotation
-            sample_theta = random.uniform(ANGLE_LIMIT[0], ANGLE_LIMIT[1])
-            sample_x, success = self.sample_x_position(bpy.data.cameras['Camera'].angle_y, north_limit, south_limit, sample_z, sample_theta)
+        sample_z = self.sample_z_position(north_limit[2])
+        # rotation
+        sample_x_rotation = random.uniform(ANGLE_LIMIT[0], ANGLE_LIMIT[1])
 
-        y_sample = self.sample_y_position(cup_coords, camera_coord, sample_x)
+        sample_x = self.sample_x_position(bpy.data.cameras['Camera'].angle_y, north_limit, south_limit, sample_z, sample_x_rotation)
+        sample_y = self.sample_y_position(west_limit, east_limit, sample_x)
+        sample_z_rotation = self.random_z_rotation(bpy.data.cameras['Camera'].angle_x, sample_y, sample_x, west_limit, east_limit)
 
-        return sample_x, y_sample, sample_z, sample_theta
+        return sample_x, sample_y, sample_z, sample_x_rotation, sample_z_rotation, [north_limit, south_limit, west_limit, east_limit]
 
     def change_camera_position(self):
-        x, y, z, theta = self.do_randomzation()
+
+        x, y, z, sample_x_rotation, sample_z_rotation, limits = self.do_randomzation()
         self.camera.location = (x, y, z)
-        self.camera.rotation_euler[0] = theta
-        self.random_z_rotation()
+        self.camera.rotation_euler[0] = sample_x_rotation
+        self.camera.rotation_euler[0] = sample_z_rotation
+        success = self.coords_within_image(limits)
+
+        if success:
+            print(sample_z_rotation)
+
+        return success
+
+    def coords_within_image(self, coords):
+
+        labels = ['north_limit', 'south_limit', 'west_limit', 'east_limit']
+
+        scene = bpy.context.scene
+        # scene.update()
+        bpy.ops.wm.redraw_timer(type='DRAW', iterations=1)
+
+
+        for idx, coord in enumerate(coords):
+            coord = mathutils.Vector(coord)
+            co_ndc = world_to_camera_view(scene, self.camera, coord)
+
+            if not((0.0 < co_ndc.x < 1.0 and
+                0.0 < co_ndc.y < 1.0)):
+                print(labels[idx], 'FAILURE')
+                return False
+
+        return True
 
 
 def blender_run():

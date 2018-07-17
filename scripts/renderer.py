@@ -3,7 +3,7 @@ import bpy
 class Renderer(object):
 
     def __init__(self, affordance_path, random_texture_path, cup_names, cup_insides, texture_randomizer,
-                 randomizer_depth=True, depth_name='depth', img_name='image', affordance_name='affordance'):
+                 randomizer_depth=False, depth_name='depth', img_name='image', affordance_name='affordance'):
 
         self.affordance_path = affordance_path
         self.random_texture_path = random_texture_path
@@ -16,8 +16,9 @@ class Renderer(object):
         self.affordance_name = affordance_name
 
         self.texture_randomizer = texture_randomizer
-
-        self.initialize_material_ids(cup_names, cup_insides)
+        self.cup_names = cup_names
+        self.inside_names = cup_insides
+        self.initialize_material_ids()
 
         self.affordance_material = False
         self.randomizer_depth = randomizer_depth
@@ -67,13 +68,13 @@ class Renderer(object):
 
         bpy.ops.render.render(write_still=True)
 
-    def initialize_material_ids(self, cup_names, inside_names):
+    def initialize_material_ids(self):
 
         for obj in list(bpy.data.objects):
 
-            if obj.name in cup_names:
+            if obj.name in self.cup_names:
                 pass_index = 1
-            elif obj.name in inside_names:
+            elif obj.name in self.inside_names:
                 pass_index = 2
             else:
                 pass_index = 0
@@ -81,6 +82,8 @@ class Renderer(object):
             obj.pass_index = pass_index
 
     def switch_to_labels(self):
+
+        self.initialize_material_ids()
 
         self.affordance_material = True
         bpy.data.scenes['Scene'].render.use_antialiasing = False
@@ -90,7 +93,16 @@ class Renderer(object):
         for obj in bpy.data.objects:
 
             if hasattr(obj.data, 'materials'):
-                obj.data.materials[0] = affordance_mat
+
+                if len(obj.data.materials) == 0:
+                    obj.data.materials.append(affordance_mat)
+                else:
+                    obj.data.materials[0] = affordance_mat
+
+
+
+
+
 
     def switch_to_random_textures(self):
 

@@ -8,59 +8,29 @@ sys.path.append(os.path.join(os.getcwd(), 'scripts'))
 
 # from scripts.utils import remove_object, set_parent, split_object, switch_origin, import_object
 from utils import remove_object, set_parent, split_object, switch_origin, import_object
+from design import CupRandomizer
 
 class TableSettingRandomizer(object):
 
-    def __init__(self, cup_names, inside_names, cup_paths, max_num_lamps=8, desk_scale_limit=(2, 4), cup_scale_limit=(0.05, 0.2), lamp_pos_limit=(-8,8),
-                lamp_height_limit=(3, 10), debug_cups=None):
-
-        if debug_cups is None:
-
-            self.cups = self.import_cups(cup_names, cup_paths)
-            for i, cup_name in enumerate(cup_names):
-                self.separate_cup_into_two_materials(cup_name, inside_names[i])
-        else:
-            self.cups = [bpy.data.objects[cup_names[0]]]
-
-        self.desk = bpy.data.objects['desk']
+    def __init__(self, cup_names, inside_names, max_num_lamps=8, desk_scale_limit=(2, 4), cup_scale_limit=(0.2, 0.4), lamp_pos_limit=(-8,8),
+                lamp_height_limit=(3, 10)):
 
         self.desk_scale_limit = desk_scale_limit
+        self.desk = bpy.data.objects['desk']
+
         self.cup_scale_limit = cup_scale_limit
+        self.cup_randomizer = CupRandomizer(cup_names, inside_names)
+        self.cups = self.cup_randomizer.generate_designs()
+
+        self.random_cup_position()
+        self.random_cup_scale()
+
         self.lamp_pos_limit = lamp_pos_limit
         self.lamp_height_limit = lamp_height_limit
 
         self.lamps = []
         self.max_num_lamps = max_num_lamps
         self.random_lamps()
-
-        #set_parent(self.cups[0], bpy.data.objects['Camera'])
-
-
-
-    def import_cups(self, cup_names, cup_paths):
-
-        cups = []
-
-        for i in range(len(cup_names)):
-
-            if hasattr(bpy.data.objects, cup_names[i]):
-                cups.append(bpy.data.objects[cup_names[i]])
-            else:
-                cups.append(self.setup_cup_on_table(cup_paths[i], cup_names[i]))
-
-        return cups
-
-    def setup_cup_on_table(self, path, name):
-
-        switch_origin('desk', max_point=True, coords=(0, 0))
-        obj = import_object(path, name)
-        switch_origin(name, max_point=False)
-        obj.scale = (0.15, 0.15, 0.15) # TODO: multiple cups
-        desk = bpy.data.objects['desk']
-        obj.location = (0, 0, desk.location[2]) # TODO: multiple cups
-        set_parent(desk, obj, vertex_parenting=True)
-
-        return obj
 
     def separate_cup_into_two_materials(self, cup_name, splitted_name):
 
@@ -72,6 +42,7 @@ class TableSettingRandomizer(object):
     def randomize_all(self):
         self.random_lamps()
         self.random_desk_scale()
+        self.cups = self.cup_randomizer.generate_designs()
         self.random_cup_scale()
         self.random_cup_position()
 
@@ -117,18 +88,20 @@ class TableSettingRandomizer(object):
 
         for cup in self.cups: # TODO: multiple cups
 
+            set_parent(self.desk, cup, vertex_parenting=True)
+
             x_max = corner_coords[0][0] * 0.7
             y_max = corner_coords[0][1] * 0.7
 
             x = random.uniform(-x_max, x_max)
             y = random.uniform(-y_max, y_max)
 
-            cup.location = (x, y, cup.location[2])
+            cup.location = (x, y, self.desk.location[2])
             cup.rotation_euler[2] = 0 # for initializing camera position
+
 
 if __name__ == "__main__":
 
     cup_names = ['cup_1']
     inside_names = ['inside_1']
-    cup_path = ['/home/aleksi/hacks/thesis/code/render/objects/cup.obj']
-    setting_randomizer = TableSettingRandomizer(cup_names, inside_names, cup_path)
+    setting_randomizer = TableSettingRandomizer(cup_names, inside_names)

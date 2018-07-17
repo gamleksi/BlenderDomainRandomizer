@@ -57,7 +57,7 @@ def import_object(path, name):
 
     deselected_all()
 
-    if path[-4:-1] == 'obj':
+    if '.obj' in path:
         bpy.ops.import_scene.obj(filepath=path)
     else:
         bpy.ops.import_scene.off(filepath=path)
@@ -100,7 +100,10 @@ def switch_origin(obj_name, max_point=True, coords=None):
 
 def highest_edge(obj):
 
-    max_idx = np.argmax([v.co.z for v in obj.data.vertices])
+    mw = obj.matrix_world
+    glob_vertex_coordinates = [mw * v.co for v in obj.data.vertices]
+
+    max_idx = np.argmax([v.z for v in glob_vertex_coordinates])
     obj.data.vertices[max_idx].select = True
 
     edges_with_max_vertex = []
@@ -167,7 +170,7 @@ def split_object(obj, splitted_name, choose_edge=highest_edge):
         bm.verts.ensure_lookup_table()
         bm.edges.ensure_lookup_table()
 
-    select_edge_loop(bm.edges[edge_id])
+        select_edge_loop(bm.edges[edge_id])
 
     bm.to_mesh(obj.data)
     bm.free()

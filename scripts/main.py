@@ -24,16 +24,15 @@ def main(steps, do_affordance=True):
 
     cup_names = ['cup_1']
     inside_names = ['inside_1']
-    cup_path = ['/home/aleksi/hacks/thesis/code/render/objects/cup.obj']
     textures = ['desk', 'wall', 'leg', 'floor'] + cup_names + inside_names
     img_path = '/home/aleksi/hacks/thesis/code/render/test_images'
     affordnace_path = '/home/aleksi/hacks/thesis/code/render/test_images'
 
-    assert(len(cup_names) == len(inside_names) and len(inside_names) == len(cup_path))
+    assert(len(cup_names) == len(inside_names) and len(inside_names))
 
     initialize_environment()
 
-    setting_randomizer = TableSettingRandomizer(cup_names, inside_names, cup_path)
+    setting_randomizer = TableSettingRandomizer(cup_names, inside_names)
     texture_randomizer = TextureRandomizer(textures)
     camera_randomizer = CameraRandomizer(bpy.data.objects['Camera'], bpy.data.objects[cup_names[0]]) # TODO: multiple cups?
     renderer = Renderer(img_path, affordnace_path, cup_names, inside_names, texture_randomizer)
@@ -44,7 +43,7 @@ def main(steps, do_affordance=True):
 
         while not success:
             setting_randomizer.randomize_all()
-            bpy.ops.wm.redraw_timer(type='DRAW', iterations=10)
+            bpy.ops.wm.redraw_timer(type='DRAW', iterations=1)
             success = camera_randomizer.change_camera_position()
 
         # Random Textures
@@ -57,4 +56,4 @@ def main(steps, do_affordance=True):
             renderer.render_save()
 
 if __name__ == "__main__":
-    main(100, do_affordance=True)
+    main(50, do_affordance=True)

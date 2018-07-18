@@ -99,11 +99,6 @@ class Renderer(object):
                 else:
                     obj.data.materials[0] = affordance_mat
 
-
-
-
-
-
     def switch_to_random_textures(self):
 
         self.affordance_material = False

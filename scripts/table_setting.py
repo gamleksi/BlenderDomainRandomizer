@@ -3,16 +3,17 @@ import random
 import sys
 import os
 import numpy as np
-
 sys.path.append(os.path.join(os.getcwd(), 'scripts'))
-
 # from scripts.utils import remove_object, set_parent, split_object, switch_origin, import_object
 from utils import remove_object, set_parent, split_object, switch_origin, import_object
 from design import CupRandomizer
+from random_objects import NoiseObjectsRandomizer
+from collision import check_collision
+
 
 class TableSettingRandomizer(object):
 
-    def __init__(self, cup_names, inside_names, max_num_lamps=8, desk_scale_limit=(2, 4), cup_scale_limit=(0.2, 0.4), lamp_pos_limit=(-8,8),
+    def __init__(self, cup_names, inside_names, random_names, max_num_lamps=8, desk_scale_limit=(2, 4), cup_scale_limit=(0.2, 0.4), lamp_pos_limit=(-8,8),
                 lamp_height_limit=(3, 10)):
 
         self.desk_scale_limit = desk_scale_limit
@@ -24,6 +25,8 @@ class TableSettingRandomizer(object):
 
         self.random_cup_position()
         self.random_cup_scale()
+
+        self.noise_randomizer = NoiseObjectsRandomizer(random_names)
 
         self.lamp_pos_limit = lamp_pos_limit
         self.lamp_height_limit = lamp_height_limit
@@ -45,6 +48,7 @@ class TableSettingRandomizer(object):
         self.cups = self.cup_randomizer.generate_designs()
         self.random_cup_scale()
         self.random_cup_position()
+        self.random_noise_objects()
 
     def random_desk_scale(self):
 
@@ -99,9 +103,34 @@ class TableSettingRandomizer(object):
             cup.location = (x, y, self.desk.location[2])
             cup.rotation_euler[2] = 0 # for initializing camera position
 
+    def random_noise_objects(self):
+
+        desk_mw = np.array([self.desk.matrix_world])
+        corner_coords = desk_mw @ np.array([1, 1, 0, 1])
+
+        noise_objects = self.noise_randomizer.generate()
+
+        for obj in noise_objects:
+
+            collision = True
+            while collision:
+
+                x_max = corner_coords[0][0] * 0.7
+                y_max = corner_coords[0][1] * 0.7
+
+                x = random.uniform(-x_max, x_max)
+                y = random.uniform(-y_max, y_max)
+
+                obj.scale = (random.uniform(4, 7), random.uniform(4, 7), random.uniform(4, 7))
+
+                obj.location = (x, y, self.desk.location[2])
+                obj.rotation_euler[2] = random.uniform(0, np.pi * 2)
+                collision = check_collision(obj, self.cups[0])
+
 
 if __name__ == "__main__":
 
     cup_names = ['cup_1']
     inside_names = ['inside_1']
-    setting_randomizer = TableSettingRandomizer(cup_names, inside_names)
+    random_names = ['random1', 'random2', 'random3', 'random4', 'random5', 'random6']
+    setting_randomizer = TableSettingRandomizer(cup_names, inside_names, random_names)

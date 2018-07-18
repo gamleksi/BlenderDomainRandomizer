@@ -1,7 +1,8 @@
 import bpy
 import random
 
-random.seed(9)
+#random.seed(9)
+random.seed(10)
 
 
 import sys
@@ -24,7 +25,9 @@ def main(steps, do_affordance=True):
 
     cup_names = ['cup_1']
     inside_names = ['inside_1']
-    textures = ['desk', 'wall', 'leg', 'floor'] + cup_names + inside_names
+    random_names = ['random1', 'random2', 'random3', 'random4', 'random5', 'random6']
+
+    textures = ['desk', 'wall', 'leg', 'floor'] + cup_names + inside_names + random_names
     img_path = '/home/aleksi/hacks/thesis/code/render/test_images'
     affordnace_path = '/home/aleksi/hacks/thesis/code/render/test_images'
 
@@ -32,7 +35,7 @@ def main(steps, do_affordance=True):
 
     initialize_environment()
 
-    setting_randomizer = TableSettingRandomizer(cup_names, inside_names)
+    setting_randomizer = TableSettingRandomizer(cup_names, inside_names, random_names)
     texture_randomizer = TextureRandomizer(textures)
     camera_randomizer = CameraRandomizer(bpy.data.objects['Camera'], bpy.data.objects[cup_names[0]]) # TODO: multiple cups?
     renderer = Renderer(img_path, affordnace_path, cup_names, inside_names, texture_randomizer)

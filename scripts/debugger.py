@@ -14,11 +14,8 @@ sys.path.append(os.path.join(os.getcwd(), 'scripts'))
 #from scripts.utils import initialize_environment
 #from scripts.renderer import Renderer
 
-from texture_random import TextureRandomizer
 from camera_position import CameraRandomizer
 from table_setting import TableSettingRandomizer
-from utils import initialize_environment
-from renderer import Renderer
 
 def main():
 

@@ -86,7 +86,7 @@ class CameraRandomizer(object):
 
     def random_z_rotation(self, view_angle, sample_y, sample_x, west_limit, east_limit):
 
-        # highest angle
+        random.uniform(4, 7random.uniform(4, 7random.uniform(4, 7)))# highest angle
         delta_y = np.abs(sample_y - west_limit[1])
         delta_x = np.abs(sample_x - west_limit[0])
         theta = np.tan(delta_y/ delta_x)
@@ -156,7 +156,6 @@ class CameraRandomizer(object):
         scene = bpy.context.scene
         # scene.update()
         bpy.ops.wm.redraw_timer(type='DRAW', iterations=1)
-
 
         for idx, coord in enumerate(coords):
             coord = mathutils.Vector(coord)

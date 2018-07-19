@@ -24,8 +24,8 @@ def check_collision(obj1, obj2):
     y_min = min([e[1] for e in box1])
     z_max = max([e[2] for e in box1])
     z_min = min([e[2] for e in box1])
-    print('Box1 min %.2f, %.2f, %.2f' % (x_min, y_min, z_min))
-    print('Box1 max %.2f, %.2f, %.2f' % (x_max, y_max, z_max))
+    #print('Box1 min %.2f, %.2f, %.2f' % (x_min, y_min, z_min))
+    #print('Box1 max %.2f, %.2f, %.2f' % (x_max, y_max, z_max))
 
     x_max2 = max([e[0] for e in box2])
     x_min2 = min([e[0] for e in box2])
@@ -33,8 +33,8 @@ def check_collision(obj1, obj2):
     y_min2 = min([e[1] for e in box2])
     z_max2 = max([e[2] for e in box2])
     z_min2 = min([e[2] for e in box2])
-    print('Box2 min %.2f, %.2f, %.2f' % (x_min2, y_min2, z_min2))
-    print('Box2 max %.2f, %.2f, %.2f' % (x_max2, y_max2, z_max2))
+    #print('Box2 min %.2f, %.2f, %.2f' % (x_min2, y_min2, z_min2))
+    #print('Box2 max %.2f, %.2f, %.2f' % (x_max2, y_max2, z_max2))
      
      
     isColliding = ((x_max >= x_min2 and x_max <= x_max2) \
@@ -44,7 +44,7 @@ def check_collision(obj1, obj2):
                     and ((z_max >= z_min2 and z_max <= z_max2) \
                     or (z_min <= z_max2 and z_min >= z_min2))
  
-    if isColliding:
-        print('Kollision!')
+#    if isColliding:
+#        print('Kollision!')
          
     return isColliding

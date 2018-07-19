@@ -1,10 +1,7 @@
 import bpy
 import random
 
-#random.seed(9)
 random.seed(10)
-
-
 import sys
 import os
 sys.path.append(os.path.join(os.getcwd(), 'scripts'))
@@ -20,6 +17,9 @@ from camera_position import CameraRandomizer
 from table_setting import TableSettingRandomizer
 from utils import initialize_environment
 from renderer import Renderer
+import time
+
+
 
 def main(steps, do_affordance=True):
 
@@ -39,6 +39,9 @@ def main(steps, do_affordance=True):
     texture_randomizer = TextureRandomizer(textures)
     camera_randomizer = CameraRandomizer(bpy.data.objects['Camera'], bpy.data.objects[cup_names[0]]) # TODO: multiple cups?
     renderer = Renderer(img_path, affordnace_path, cup_names, inside_names, texture_randomizer)
+    num_failures = 0
+
+    start = time.time()
 
     for i in range(steps):
 
@@ -46,8 +49,9 @@ def main(steps, do_affordance=True):
 
         while not success:
             setting_randomizer.randomize_all()
-            bpy.ops.wm.redraw_timer(type='DRAW', iterations=1)
             success = camera_randomizer.change_camera_position()
+            if not success:
+                num_failures += 1
 
         # Random Textures
         renderer.switch_to_random_textures()
@@ -58,5 +62,9 @@ def main(steps, do_affordance=True):
             renderer.switch_to_labels()
             renderer.render_save()
 
+    end = time.time()
+    print('num_failures', num_failures)
+    print('time', end - start)
+
 if __name__ == "__main__":
-    main(50, do_affordance=True)
+    main(60, do_affordance=True)

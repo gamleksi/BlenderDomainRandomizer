@@ -15,6 +15,7 @@ class CupRandomizer(object):
         self.cup_names = cup_names
         self.inner_names = inner_names
         self.cup_model = bpy.data.objects[model_name]
+        self.coefs = []
 
     def random_function(self, z_values):
 
@@ -29,6 +30,8 @@ class CupRandomizer(object):
             term1 = (1 + np.sin(r2 * z + r3)) / 2
             term2 = np.log(z + r4) / 3
             fz[i] = r5 * term1 + (1 - r5) * term2
+
+        self.coefs = [r2, r3, r4, r5]
 
         return fz
 

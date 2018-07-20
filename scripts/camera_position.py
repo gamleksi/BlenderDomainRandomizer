@@ -5,8 +5,8 @@ import mathutils
 from bpy_extras.object_utils import world_to_camera_view
 
 CAMERA_Z_UPPER_LIMIT = 4
-CAMERA_X_LIMIT = [1.5, 4.5]
-ANGLE_LIMIT = [0.7, 1.56]
+CAMERA_X_LIMIT = [1.5, 3]
+ANGLE_LIMIT = [0.7, np.pi/2]
 
 
 class CameraRandomizer(object):
@@ -31,19 +31,8 @@ class CameraRandomizer(object):
 
         return limit_coord
 
-    def sample_z_position(self, view_angle, north_limit, south_limit):
-
-        # Upper limit
-        delta_x = np.abs(south_limit[0] - self.camera.location[0])
-        upper_limit = np.tan(view_angle/2) * delta_x + south_limit[2]
-        upper_limit =  min(CAMERA_Z_UPPER_LIMIT, upper_limit * 0.90)
-
-        # upper limit
-        delta_x = np.abs(north_limit[0] - self.camera.location[0])
-        lower_limit = north_limit[2] - np.tan(view_angle/2) * delta_x
-        lower_limit = max(north_limit[2] + 1, lower_limit)
-
-        return random.uniform(lower_limit, upper_limit)
+    def sample_z_position(self, north_limit):
+        return random.uniform(north_limit[2] + 1, CAMERA_Z_UPPER_LIMIT)
 
     def sample_x_position(self, view_angle, south_limit, z):
 
@@ -65,8 +54,7 @@ class CameraRandomizer(object):
         delta_z = np.abs(z - south_limit[2])
         high_angle = np.arctan(delta_x / delta_z) + view_angle / 2
         high_angle = high_angle * 0.95
-        high_angle = min(np.pi / 2, high_angle)
-
+        high_angle = min(np.pi/2 - 0.2, high_angle)
 
         return random.uniform(low_angle, high_angle)
 
@@ -152,7 +140,7 @@ class CameraRandomizer(object):
         south_limit = self.south_coord_limit(cup_coords, camera_coord)
         west_limit, east_limit = self.west_and_east_limits(cup_coords, camera_coord[1])
 
-        sample_z = self.sample_z_position(bpy.data.cameras['Camera'].angle_y, north_limit, south_limit)
+        sample_z = self.sample_z_position(north_limit)
         # rotation
         sample_x = self.sample_x_position(bpy.data.cameras['Camera'].angle_y, south_limit, sample_z)
         sample_x_rotation = self.sample_x_rotation(bpy.data.cameras['Camera'].angle_y, north_limit, south_limit, sample_z, sample_x)
@@ -173,12 +161,31 @@ class CameraRandomizer(object):
 
     def coords_within_image(self, coords):
 
-        labels = ['north_limit', 'south_limit', 'west_limit', 'east_limit']
-
         scene = bpy.context.scene
         scene.update()
         cs, ce = self.camera.data.clip_start, self.camera.data.clip_end
-        # bpy.ops.wm.redraw_timer(type='DRAW', iterations=1)
+
+        object_names = [obj.name for obj in list(bpy.data.objects)]
+        random_objects = []
+        image_coords = []
+
+        for name in object_names:
+
+            if 'random' == name[:6]:
+                obj = bpy.data.objects[name]
+                mat_world = obj.matrix_world
+                verts = (mat_world * vert.co for vert in obj.data.vertices)
+                coords_2d = [world_to_camera_view(scene, self.camera, coord) for coord in verts]
+                image_coords.append(coords_2d)
+                random_objects.append(obj)
+
+        def random_object_is_blocking(obj_coords, limit_coord):
+
+            for co in obj_coords:
+                if np.abs(co.x - limit_coord.x) < 0.01 and np.abs(co.y - limit_coord.y) < 0.01 and co.z < limit_coord.z:
+                    return True
+            return False
+
 
         for idx, coord in enumerate(coords):
             coord = mathutils.Vector(coord)
@@ -186,8 +193,22 @@ class CameraRandomizer(object):
 
             if not((0.0 < co_ndc.x < 1.0 and
                 0.0 < co_ndc.y < 1.0 and cs < co_ndc.z < ce)):
-                print('hello')
+
                 return False
+
+            update_objects = []
+            update_image_coords = []
+            for i in range(len(image_coords)):
+
+                if random_object_is_blocking(image_coords[i], co_ndc):
+                    obstacle = random_objects[i]
+                    print('POP', obstacle.name)
+                    bpy.data.objects.remove(obstacle)
+                else:
+                    update_objects.append(random_objects[i])
+                    update_image_coords.append(image_coords[i])
+            random_objects = update_objects
+            image_coords = update_image_coords
 
         return True
 

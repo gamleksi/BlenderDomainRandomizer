@@ -1,46 +1,86 @@
 import bpy
 import random
 
-random.seed(10)
 import sys
 import os
+import argparse
 sys.path.append(os.path.join(os.getcwd(), 'scripts'))
-
-#from scripts.texture_random import TextureRandomizer
-#from scripts.camera_position import CameraRandomizer
-#from scripts.table_setting import TableSettingRandomizer
-#from scripts.utils import initialize_environment
-#from scripts.renderer import Renderer
 
 from texture_random import TextureRandomizer
 from camera_position import CameraRandomizer
 from table_setting import TableSettingRandomizer
 from utils import initialize_environment
 from renderer import Renderer
+from logger import Logger
 import time
 
+argv = sys.argv
+if "--" not in argv:
+    argv = []
+else:
+   argv = argv[argv.index("--") + 1:]
+
+parser = argparse.ArgumentParser()
+parser.add_argument('--steps', type=int, default=10)
+parser.add_argument('--folder', type=str, default='test')
+parser.add_argument('--affordance', type=str, default='afforance_images/')
+parser.add_argument('--image', type=str, default='images')
+parser.add_argument('--depth', type=str, default='depth')
+parser.add_argument('--render_affordacnce', type=bool, default=True)
+parser.add_argument('--render_depth', type=bool, default=True)
+parser.add_argument('--debug', type=bool, default=False)
+parser.add_argument('--sample_path', type=str, default='samples')
+args = parser.parse_args(argv)
 
 
-def main(steps, do_affordance=True):
+def create_folder(directory, debug):
+    if not os.path.isdir(directory):
+       os.makedirs(directory)
+    elif not debug:
+        raise Exception('Folder exist already')
+
+
+
+def main(args):
+
+    steps = args.steps
+    do_affordance = args.render_affordacnce
+    do_depth = args.render_depth
+    debug = args.debug
+    sample_path = args.sample_path
+
+    folder_path = os.path.join(sample_path, args.folder)
+    img_path = os.path.join(folder_path, args.image)
+    affordance_path = os.path.join(folder_path, args.affordance)
+    depth_path = os.path.join(folder_path, args.depth)
+
+    create_folder(sample_path, True) # hacky
+    create_folder(folder_path, debug)
+    create_folder(img_path, debug)
+    create_folder(affordance_path, debug)
+    create_folder(depth_path, debug)
 
     cup_names = ['cup_1']
     inside_names = ['inside_1']
-    random_names = ['random1', 'random2', 'random3', 'random4', 'random5', 'random6']
-
+    random_names = ['random1', 'random2', 'random3', 'random4', 'random5', 'random6', 'random7', 'random8', 'random9', 'random10']
     textures = ['desk', 'wall', 'leg', 'floor'] + cup_names + inside_names + random_names
-    img_path = 'test_images/'
-    affordnace_path = 'test_images/'
 
     assert(len(cup_names) == len(inside_names) and len(inside_names))
+
+    if debug:
+        random.seed(10)
 
     initialize_environment()
 
     setting_randomizer = TableSettingRandomizer(cup_names, inside_names, random_names)
     texture_randomizer = TextureRandomizer(textures)
     camera_randomizer = CameraRandomizer(bpy.data.objects['Camera'], bpy.data.objects[cup_names[0]]) # TODO: multiple cups?
-    renderer = Renderer(img_path, affordnace_path, cup_names, inside_names, texture_randomizer)
-    num_failures = 0
+    renderer = Renderer(img_path, depth_path, affordance_path, cup_names, inside_names, texture_randomizer,
+                        randomizer_depth=do_depth)
 
+    print(folder_path)
+    logger = Logger(setting_randomizer, camera_randomizer, folder_path, cup_names[0])
+    num_failures = 0
     start = time.time()
 
     for i in range(steps):
@@ -52,6 +92,8 @@ def main(steps, do_affordance=True):
             success = camera_randomizer.change_camera_position()
             if not success:
                 num_failures += 1
+
+        logger.log()
 
         # Random Textures
         renderer.switch_to_random_textures()
@@ -67,4 +109,4 @@ def main(steps, do_affordance=True):
     print('time', end - start)
 
 if __name__ == "__main__":
-    main(1, do_affordance=True)
+    main(args)

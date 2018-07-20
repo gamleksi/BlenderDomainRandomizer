@@ -2,10 +2,11 @@ import bpy
 
 class Renderer(object):
 
-    def __init__(self, affordance_path, random_texture_path, cup_names, cup_insides, texture_randomizer,
-                 randomizer_depth=False, depth_name='depth', img_name='image', affordance_name='affordance'):
+    def __init__(self, random_texture_path, depth_path, affordance_path, cup_names, cup_insides, texture_randomizer,
+                 randomizer_depth=True, depth_name='depth', img_name='image', affordance_name='affordance'):
 
         self.affordance_path = affordance_path
+        self.depth_path = depth_path
         self.random_texture_path = random_texture_path
 
         self.affordance_index = 0
@@ -57,7 +58,7 @@ class Renderer(object):
             links.new(mapValue.outputs['Value'], invert.inputs['Color'])
 
             depth_saver = tree.nodes.new(type='CompositorNodeOutputFile')
-            depth_saver.base_path = img_path
+            depth_saver.base_path = self.depth_path
             depth_saver.file_slots[0].path = '{}_{}_'.format(index, self.depth_name)
             links.new(invert.outputs['Color'], depth_saver.inputs['Image'])
 

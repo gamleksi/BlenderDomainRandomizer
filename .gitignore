@@ -2,3 +2,9 @@ test_images/*
 .idea
 scripts/__pycache__/*
 objects/ycb/*
+cup1_samples/
+objects/cup.JPG
+objects/cup.JPG2
+env_randomization.blend
+
+samples/

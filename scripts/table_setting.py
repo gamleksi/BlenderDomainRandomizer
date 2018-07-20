@@ -75,7 +75,6 @@ class TableSettingRandomizer(object):
 
         for lamp in self.lamps:
             remove_object(lamp)
-
         self.lamps = []
         for i in range(random.randint(1, self.max_num_lamps)):
             bpy.ops.object.lamp_add(location=self.random_position(

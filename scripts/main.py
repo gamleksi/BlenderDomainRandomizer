@@ -28,8 +28,8 @@ def main(steps, do_affordance=True):
     random_names = ['random1', 'random2', 'random3', 'random4', 'random5', 'random6']
 
     textures = ['desk', 'wall', 'leg', 'floor'] + cup_names + inside_names + random_names
-    img_path = '/home/aleksi/hacks/thesis/code/render/test_images'
-    affordnace_path = '/home/aleksi/hacks/thesis/code/render/test_images'
+    img_path = 'test_images/'
+    affordnace_path = 'test_images/'
 
     assert(len(cup_names) == len(inside_names) and len(inside_names))
 
@@ -67,4 +67,4 @@ def main(steps, do_affordance=True):
     print('time', end - start)
 
 if __name__ == "__main__":
-    main(60, do_affordance=True)
+    main(1, do_affordance=True)

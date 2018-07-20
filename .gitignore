@@ -1,2 +1,4 @@
 test_images/*
 .idea
+scripts/__pycache__/*
+objects/ycb/*

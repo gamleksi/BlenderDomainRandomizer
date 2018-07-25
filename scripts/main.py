@@ -39,6 +39,19 @@ def create_folder(directory, debug):
     elif not debug:
         raise Exception('Folder exist already')
 
+def empty_memory():
+
+    for block in bpy.data.meshes:
+        if block.users == 0:
+            bpy.data.meshes.remove(block)
+
+    for block in bpy.data.images:
+        if block.users == 0:
+            bpy.data.images.remove(block)
+
+    for block in bpy.data.lamps:
+        if block.users == 0:
+            bpy.data.lamps.remove(block)
 
 
 def main(args):
@@ -103,6 +116,8 @@ def main(args):
         if do_affordance:
             renderer.switch_to_labels()
             renderer.render_save()
+
+        empty_memory()
 
     end = time.time()
     print('num_failures', num_failures)

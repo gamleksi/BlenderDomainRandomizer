@@ -11,7 +11,6 @@ NAMES = list(filter(lambda x : 'cup' not in x and 'mug' not in x and 'bowl' not 
 
 PATHS = [os.path.join(YCB_PATH, name, 'google_16k/textured.obj') for name in NAMES]
 
-
 import random
 import numpy as np
 

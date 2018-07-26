@@ -35,12 +35,23 @@ class CupRandomizer(object):
 
         return fz
 
-    def transform_vertices(self, obj, scale=1, b=0.3):
-        fz = self.random_function([v.co.z for v in obj.data.vertices])
+    def transform_vertices(self, cup_model, cup_name, scale=1, b=0.3):
+
+        fz = self.random_function([v.co.z for v in cup_model.data.vertices])
         fz = fz * scale + b
-        for i, vertex in enumerate(obj.data.vertices):
-            vertex.co.x = fz[i] * vertex.co.x
-            vertex.co.y = fz[i] * vertex.co.y
+
+        mesh = cup_model.data.copy()
+
+        for i, vertex in enumerate(cup_model.data.vertices):
+            co = np.array([fz[i], fz[i], 1]) * vertex.co
+            mesh.vertices[i].co = (co[0], co[1], co[2])
+
+        cup = bpy.data.objects.new(cup_name, mesh)
+        cup.name = cup_name
+       # cup.data.update(calc_edges=True)
+        cup.data.update()
+        return cup
+
 
     def separate_cup_into_two_materials(self, cup, splitted_name):
 
@@ -54,15 +65,11 @@ class CupRandomizer(object):
             bpy.data.objects.remove(bpy.data.objects[cup_name])
             bpy.data.objects.remove(bpy.data.objects[inner_name])
 
-        cup = self.cup_model.copy()
-        cup.data = cup.data.copy()
-        cup.name = cup_name
 
-        cup.layers[1] = False
+        cup = self.transform_vertices(self.cup_model, cup_name)
         cup.layers[0] = True
-
         bpy.context.scene.objects.link(cup)
-        self.transform_vertices(cup)
+
         self.separate_cup_into_two_materials(cup, inner_name)
 
         return cup

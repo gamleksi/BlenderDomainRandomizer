@@ -186,7 +186,6 @@ class CameraRandomizer(object):
                     return True
             return False
 
-
         for idx, coord in enumerate(coords):
             coord = mathutils.Vector(coord)
             co_ndc = world_to_camera_view(scene, self.camera, coord)

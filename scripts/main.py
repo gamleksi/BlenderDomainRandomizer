@@ -33,6 +33,8 @@ parser.add_argument('--sample_path', type=str, default='samples')
 args = parser.parse_args(argv)
 
 
+
+
 def create_folder(directory, debug):
     if not os.path.isdir(directory):
        os.makedirs(directory)
@@ -101,19 +103,26 @@ def main(args):
         success = False
 
         while not success:
+            print('Table Setting randomizer')
             setting_randomizer.randomize_all()
+            print('Camera randomizer')
             success = camera_randomizer.change_camera_position()
             if not success:
+                print('Table and camera failed')
                 num_failures += 1
 
+
+        print('Logging')
         logger.log()
 
         # Random Textures
+        print('Random textures')
         renderer.switch_to_random_textures()
         renderer.render_save()
 
         # Affordance labels
         if do_affordance:
+            print('Affordance')
             renderer.switch_to_labels()
             renderer.render_save()
 
@@ -124,4 +133,9 @@ def main(args):
     print('time', end - start)
 
 if __name__ == "__main__":
-    main(args)
+    import cProfile
+    cProfile.run("main(args)", "blender.prof")
+    import pstats
+    p = pstats.Stats("blender.prof")
+    p.sort_stats("cumulative").print_stats(20)
+

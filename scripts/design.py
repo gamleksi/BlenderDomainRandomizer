@@ -1,5 +1,6 @@
 import sys, os
 
+import bmesh
 sys.path.append(os.path.join(os.getcwd(), 'scripts'))
 import bpy
 from utils import split_object, set_parent
@@ -37,19 +38,25 @@ class CupRandomizer(object):
 
     def transform_vertices(self, cup_model, cup_name, scale=1, b=0.3):
 
-        fz = self.random_function([v.co.z for v in cup_model.data.vertices])
+        cup = cup_model.copy()
+        cup.data = cup_model.data.copy()
+        bm = bmesh.new()
+        bm.from_mesh(cup.data)
+        bm.verts.ensure_lookup_table()
+
+        vertices = list(bm.verts)
+
+        fz = self.random_function([v.co.z for v in vertices])
         fz = fz * scale + b
 
-        mesh = cup_model.data.copy()
-
-        for i, vertex in enumerate(cup_model.data.vertices):
+        for i, vertex in enumerate(vertices):
             co = np.array([fz[i], fz[i], 1]) * vertex.co
-            mesh.vertices[i].co = (co[0], co[1], co[2])
+            bm.verts[i].co = (co[0], co[1], co[2])
 
-        cup = bpy.data.objects.new(cup_name, mesh)
+        bm.to_mesh(cup.data)
+        bm.free()
+
         cup.name = cup_name
-       # cup.data.update(calc_edges=True)
-        cup.data.update()
         return cup
 
 
@@ -64,7 +71,6 @@ class CupRandomizer(object):
         if cup_name in [obj.name for obj in list(bpy.data.objects)]:
             bpy.data.objects.remove(bpy.data.objects[cup_name])
             bpy.data.objects.remove(bpy.data.objects[inner_name])
-
 
         cup = self.transform_vertices(self.cup_model, cup_name)
         cup.layers[0] = True
@@ -82,3 +88,7 @@ class CupRandomizer(object):
 
         return cups
 
+
+if __name__ == '__main__':
+    cr = CupRandomizer(['cup_1'], ['inner_1'])
+    cr.generate_designs()

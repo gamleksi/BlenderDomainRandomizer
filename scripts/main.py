@@ -26,14 +26,21 @@ parser.add_argument('--folder', type=str, default='test')
 parser.add_argument('--affordance', type=str, default='afforance_images/')
 parser.add_argument('--image', type=str, default='images')
 parser.add_argument('--depth', type=str, default='depth')
-parser.add_argument('--render_affordacnce', type=bool, default=True)
-parser.add_argument('--render_depth', type=bool, default=True)
-parser.add_argument('--debug', type=bool, default=False)
+
+parser.add_argument('--affordance', dest='affordance', action='store_true')
+parser.add_argument('--no-affordance', dest='affordance', action='store_false')
+paser.set_defaults(affordance=True)
+
+parser.add_argument('--depth', dest='depth', action='store_true')
+parser.add_argument('--no-depth', dest='depth', action='store_false')
+paser.set_defaults(depth=True)
+
+parser.add_argument('--debug', dest='debug', action='store_true')
+parser.add_argument('--no-debug', dest='debug', action='store_false')
+paser.set_defaults(debug=False)
+
 parser.add_argument('--sample_path', type=str, default='samples')
 args = parser.parse_args(argv)
-
-
-
 
 def create_folder(directory, debug):
     if not os.path.isdir(directory):
@@ -59,8 +66,8 @@ def empty_memory():
 def main(args):
 
     steps = args.steps
-    do_affordance = args.render_affordacnce
-    do_depth = args.render_depth
+    do_affordance = args.affordance
+    do_depth = args.depth
     debug = args.debug
     sample_path = args.sample_path
 
@@ -133,9 +140,12 @@ def main(args):
     print('time', end - start)
 
 if __name__ == "__main__":
-    import cProfile
-    cProfile.run("main(args)", "blender.prof")
-    import pstats
-    p = pstats.Stats("blender.prof")
-    p.sort_stats("cumulative").print_stats(20)
+   if args.debug:
+      import cProfile
+      cProfile.run("main(args)", "blender.prof")
+      import pstats
+      p = pstats.Stats("blender.prof")
+      p.sort_stats("cumulative").print_stats(20)
+   else:
+      main(args)
 

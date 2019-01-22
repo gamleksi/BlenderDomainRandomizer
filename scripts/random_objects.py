@@ -60,7 +60,7 @@ class NoiseObjectsRandomizer(object):
         self.random_ids = []
 
         for i in range(num_objects):
-            obj_id = random.randint(0, len(self.noise_objs) - 1)
+            obj_id = random.randint(1, len(self.noise_objs) - 1) # lazy fix to remove can from the list
             noise_obj = self.noise_objs[obj_id]
             self.random_ids.append(noise_obj.name)
             obj = noise_obj.copy()

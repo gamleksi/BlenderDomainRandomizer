@@ -134,6 +134,14 @@ class CameraRandomizer(object):
         cup = self.parent_cup
         mw = cup.matrix_world
         cup_coords = [np.array(mw * v.co) for v in cup.data.vertices] # Global coordinates of vertices
+
+        # second cup
+        cup2 = bpy.context.scene.objects['cup_2']
+        mw = cup2.matrix_world
+        cup_coords2 = [np.array(mw * v.co) for v in cup2.data.vertices] # Global coordinates of vertices
+
+        cup_coords = cup_coords + cup_coords2
+
         camera_coord = self.camera.location
 
         north_limit = self.north_coord_limit(cup_coords, camera_coord)

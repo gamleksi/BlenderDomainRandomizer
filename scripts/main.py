@@ -21,26 +21,25 @@ else:
    argv = argv[argv.index("--") + 1:]
 
 parser = argparse.ArgumentParser()
-parser.add_argument('--steps', type=int, default=10)
+parser.add_argument('--num-samples', type=int, default=10)
+parser.add_argument('--num-cups', type=int, default=1)
+
 parser.add_argument('--folder', type=str, default='test')
-parser.add_argument('--affordance', type=str, default='afforance_images/')
-parser.add_argument('--image', type=str, default='images')
-parser.add_argument('--depth', type=str, default='depth')
 
 parser.add_argument('--affordance', dest='affordance', action='store_true')
 parser.add_argument('--no-affordance', dest='affordance', action='store_false')
-paser.set_defaults(affordance=True)
+parser.set_defaults(affordance=True)
 
 parser.add_argument('--depth', dest='depth', action='store_true')
 parser.add_argument('--no-depth', dest='depth', action='store_false')
-paser.set_defaults(depth=True)
+parser.set_defaults(depth=True)
 
 parser.add_argument('--debug', dest='debug', action='store_true')
 parser.add_argument('--no-debug', dest='debug', action='store_false')
-paser.set_defaults(debug=False)
+parser.set_defaults(debug=False)
 
-parser.add_argument('--sample_path', type=str, default='samples')
 args = parser.parse_args(argv)
+
 
 def create_folder(directory, debug):
     if not os.path.isdir(directory):
@@ -65,29 +64,31 @@ def empty_memory():
 
 def main(args):
 
-    steps = args.steps
     do_affordance = args.affordance
     do_depth = args.depth
     debug = args.debug
-    sample_path = args.sample_path
 
-    folder_path = os.path.join(sample_path, args.folder)
-    img_path = os.path.join(folder_path, args.image)
-    affordance_path = os.path.join(folder_path, args.affordance)
-    depth_path = os.path.join(folder_path, args.depth)
+    folder_path = os.path.join('samples', args.folder)
+    img_path = os.path.join(folder_path, 'images')
+    affordance_path = os.path.join(folder_path, 'affordances')
+    depth_path = os.path.join(folder_path, 'depths')
 
-    create_folder(sample_path, True) # hacky
     create_folder(folder_path, debug)
     create_folder(img_path, debug)
     create_folder(affordance_path, debug)
     create_folder(depth_path, debug)
 
-    cup_names = ['cup_1']
-    inside_names = ['inside_1']
-    random_names = ['random1', 'random2', 'random3', 'random4', 'random5', 'random6', 'random7', 'random8', 'random9', 'random10']
-    textures = ['desk', 'wall', 'leg', 'floor'] + cup_names + inside_names + random_names
+    cup_names = []
+    inside_names = []
 
-    assert(len(cup_names) == len(inside_names) and len(inside_names))
+    for i in range(1, args.num_cups + 1):
+       cup_names.append('cup_{}'.format(i))
+       inside_names.append('inside_{}'.format(i))
+
+    random_names = [
+          'random1', 'random2', 'random3', 'random4', 'random5',
+          'random6', 'random7', 'random8', 'random9', 'random10']
+    textures = ['desk', 'wall', 'leg', 'floor'] + cup_names + inside_names + random_names
 
     if debug:
         random.seed(10)
@@ -105,7 +106,7 @@ def main(args):
     num_failures = 0
     start = time.time()
 
-    for i in range(steps):
+    for i in range(args.num_samples):
 
         success = False
 
@@ -117,7 +118,6 @@ def main(args):
             if not success:
                 print('Table and camera failed')
                 num_failures += 1
-
 
         print('Logging')
         logger.log()
@@ -140,6 +140,7 @@ def main(args):
     print('time', end - start)
 
 if __name__ == "__main__":
+
    if args.debug:
       import cProfile
       cProfile.run("main(args)", "blender.prof")

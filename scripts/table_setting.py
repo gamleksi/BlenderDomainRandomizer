@@ -89,24 +89,51 @@ class TableSettingRandomizer(object):
         desk_mw = np.array([self.desk.matrix_world])
         corner_coords = desk_mw @ np.array([1, 1, 0, 1])
 
-        for cup in self.cups: # TODO: multiple cups
+        x_max = corner_coords[0][0] * 0.7
+        y_max = corner_coords[0][1] * 0.7
 
-            set_parent(self.desk, cup, vertex_parenting=True)
+        # Cup origin on top of the table
+        set_parent(self.desk, self.cups[0], vertex_parenting=True)
 
-            x_max = corner_coords[0][0] * 0.7
-            y_max = corner_coords[0][1] * 0.7
+        # Draw x and y positions
+        x = random.uniform(-x_max, x_max)
+        y = random.uniform(-y_max, y_max)
 
-            x = random.uniform(-x_max, x_max)
-            y = random.uniform(-y_max, y_max)
+        self.cups[0].location = (x, y, self.desk.location[2])
+        self.cups[0].rotation_euler[2] = 0 # for initializing camera position
 
-            cup.location = (x, y, self.desk.location[2])
-            cup.rotation_euler[2] = 0 # for initializing camera position
+        # Uses collision checking (brute force) to draw a position for other cups
+        for idx in range(1, len(self.cups)):
+
+            set_parent(self.desk, self.cups[idx], vertex_parenting=True)
+
+            collision = True
+            while collision:
+
+                x = random.uniform(-x_max, x_max)
+                y = random.uniform(-y_max, y_max)
+
+                self.cups[idx].location = (x, y, self.desk.location[2])
+                self.cups[idx].rotation_euler[2] = 0
+
+                collision = check_collision(self.cups[idx], self.cups[0])
+
+                # More than two cups exist
+#                if not(collision):
+#                    for idx in range(2, len(self.cups)):
+#                        collision = check_collision(obj, self.cups[idx])
+#                        if (collision):
+#                            break
+
 
     def random_noise_objects(self):
 
         desk_mw = np.array([self.desk.matrix_world])
         corner_coords = desk_mw @ np.array([1, 1, 0, 1])
+        x_max = corner_coords[0][0] * 0.7
+        y_max = corner_coords[0][1] * 0.7
 
+        # Sets the random number of clutter objects on the table
         noise_objects = self.noise_randomizer.generate()
 
         for obj in noise_objects:
@@ -114,17 +141,25 @@ class TableSettingRandomizer(object):
             collision = True
             while collision:
 
-                x_max = corner_coords[0][0] * 0.7
-                y_max = corner_coords[0][1] * 0.7
-
                 x = random.uniform(-x_max, x_max)
                 y = random.uniform(-y_max, y_max)
 
-                obj.scale = (random.uniform(4, 7), random.uniform(4, 7), random.uniform(4, 7))
+                obj.scale = (
+                        random.uniform(4, 7),
+                        random.uniform(4, 7), random.uniform(4, 7))
 
                 obj.location = (x, y, self.desk.location[2])
                 obj.rotation_euler[2] = random.uniform(0, np.pi * 2)
+
+                # Checks the first cup collision
                 collision = check_collision(obj, self.cups[0])
+
+                # If collision not occudered, check a collision with a next cup
+                if not(collision):
+                    for idx in range(1, len(self.cups)):
+                        collision = check_collision(obj, self.cups[idx])
+                        if (collision):
+                            break
 
 
 if __name__ == "__main__":

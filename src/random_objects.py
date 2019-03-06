@@ -1,14 +1,22 @@
 import os
 import bpy
 import random
-from scripts.utils import import_object, YCB_PATH, RANDOM_NAMES
+from src.utils import import_object, YCB_PATH, RANDOM_NAMES
 
 
 def get_ycb_paths():
 
-    names = os.listdir(YCB_PATH)
+    clutter_file = open('clutter_objects.txt', 'r')
+
+    names = []
+
+    for line in clutter_file:
+        names.append(line[:-1])
+
+    clutter_file.close()
     names = list(filter(lambda x : 'cup' not in x and 'mug' not in x and 'bowl' not in x, names))
     paths = [os.path.join(YCB_PATH, name, 'google_16k/textured.obj') for name in names]
+
     return (names, paths)
 
 
@@ -25,6 +33,10 @@ class ClutterObjectsRandomizer(object):
         for i, path in enumerate(ycb_paths):
 
             if not ycb_names[i] in object_names:
+
+                if not(os.path.exists(path)):
+                    raise Exception('You need to load object (.obj) to the right path')
+
                 obj = import_object(path, ycb_names[i])
                 obj.layers[2] = True
                 obj.layers[0] = False
@@ -76,4 +88,6 @@ class ClutterObjectsRandomizer(object):
 
 
 if __name__ == "__main__":
+    import sys
+    sys.path.append(os.getcwd())
     nr = ClutterObjectsRandomizer()

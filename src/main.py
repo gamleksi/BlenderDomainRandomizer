@@ -7,12 +7,12 @@ import bpy
 
 sys.path.append(os.getcwd())
 
-from scripts.texture_random import TextureRandomizer
-from scripts.camera_position import CameraRandomizer
-from scripts.table_setting import TableSettingRandomizer
-from scripts.utils import blender_to_object_mode, ENV_OBJECT_NAMES, RANDOM_NAMES
-from scripts.renderer import Renderer
-from scripts.logger import Logger
+from src.texture_random import TextureRandomizer
+from src.camera_position import CameraRandomizer
+from src.table_setting import TableSettingRandomizer
+from src.utils import blender_to_object_mode, ENV_OBJECT_NAMES, RANDOM_NAMES
+from src.renderer import Renderer
+from src.logger import Logger
 
 argv = sys.argv
 if "--" not in argv:
@@ -146,6 +146,7 @@ def main(args):
 
 if __name__ == "__main__":
 
+   sys.path.append(os.getcwd())
    if args.debug:
       import cProfile
       cProfile.run("main(args)", "blender.prof")

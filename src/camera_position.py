@@ -4,7 +4,7 @@ import mathutils
 import bpy
 from bpy_extras.object_utils import world_to_camera_view
 
-from scripts.utils import CAMERA_Z_UPPER_LIMIT, CAMERA_X_LIMIT
+from src.utils import CAMERA_Z_UPPER_LIMIT, CAMERA_X_LIMIT
 
 
 class CameraRandomizer(object):
@@ -226,5 +226,7 @@ def blender_run():
     cr.change_camera_position()
 
 if __name__== '__main__':
+    import sys, os
+    sys.path.append(os.getcwd())
     blender_run()
 

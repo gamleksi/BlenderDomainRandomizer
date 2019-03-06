@@ -6,7 +6,7 @@ random.seed(9)
 
 import sys
 import os
-sys.path.append(os.path.join(os.getcwd(), 'scripts'))
+sys.path.append(os.path.join(os.getcwd()))
 
 #from scripts.texture_random import TextureRandomizer
 #from scripts.camera_position import CameraRandomizer
@@ -14,8 +14,8 @@ sys.path.append(os.path.join(os.getcwd(), 'scripts'))
 #from scripts.utils import initialize_environment
 #from scripts.renderer import Renderer
 
-from camera_position import CameraRandomizer
-from table_setting import TableSettingRandomizer
+from src.camera_position import CameraRandomizer
+from src.table_setting import TableSettingRandomizer
 
 def main():
 

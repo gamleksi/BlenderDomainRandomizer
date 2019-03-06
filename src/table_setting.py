@@ -1,10 +1,10 @@
 import bpy
 import random
 import numpy as np
-from scripts.utils import remove_object, set_parent, split_object
-from scripts.design import CupRandomizer
-from scripts.random_objects import ClutterObjectsRandomizer
-from scripts.collision import check_collision
+from src.utils import remove_object, set_parent, split_object
+from src.design import CupRandomizer
+from src.random_objects import ClutterObjectsRandomizer
+from src.collision import check_collision
 
 
 class TableSettingRandomizer(object):
@@ -152,7 +152,8 @@ class TableSettingRandomizer(object):
 
 
 if __name__ == "__main__":
-
+    import sys, os
+    sys.path.append(os.getcwd())
     cup_names = ['cup_1']
     inside_names = ['inside_1']
     setting_randomizer = TableSettingRandomizer(cup_names, inside_names)

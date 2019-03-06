@@ -192,7 +192,6 @@ def split_object(obj, splitted_name, choose_edge=highest_edge):
 
 
 # ENV DEPENDENT VALUES
-
 YCB_PATH = "objects/ycb" # Path to the ycb files
 
 # Include more names to the list, if you want more clutter objects on the table

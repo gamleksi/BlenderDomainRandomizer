@@ -1,9 +1,8 @@
 import sys, os
 
 import bmesh
-sys.path.append(os.path.join(os.getcwd(), 'scripts'))
 import bpy
-from utils import split_object, set_parent
+from src.utils import split_object, set_parent
 import random
 import numpy as np
 
@@ -90,5 +89,6 @@ class CupRandomizer(object):
 
 
 if __name__ == '__main__':
+    sys.path.append(os.path.join(os.getcwd(), 'src'))
     cr = CupRandomizer(['cup_1'], ['inner_1'])
     cr.generate_designs()

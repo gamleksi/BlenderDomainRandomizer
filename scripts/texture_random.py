@@ -1,15 +1,6 @@
 import bpy
 import random
 
-MATERIAL = bpy.data.materials['random']
-MATERIAL_NODE = bpy.data.materials['random_material']
-
-TEXTURE_COLOR = bpy.data.textures['random_texture']
-TEXTURE_DISPLACE = bpy.data.textures['random_displace']
-
-SCALE = 5
-
-
 def find_nodes(nodes, name):
     result = []
     for node in nodes:
@@ -18,7 +9,6 @@ def find_nodes(nodes, name):
     return result
 
 
-# hacky
 def find_objects(name):
     objs = []
     for obj in bpy.data.objects:
@@ -27,7 +17,11 @@ def find_objects(name):
     return objs
 
 
+SCALE = 5  # Scale coefficient for sampling
+
+
 class TextureHandler(object):
+
     def __init__(self, obj_name, displace=False):
         self.obj_name = obj_name
         self.displace = displace
@@ -39,7 +33,8 @@ class TextureHandler(object):
 
         self.material = bpy.data.materials.new('{}_random'.format(self.obj_name))
 
-        self.texture = TEXTURE_COLOR.copy()
+        # Random Texture node created already in Blender (env.blend)
+        self.texture = bpy.data.textures['random_texture'].copy()
         self.texture.name = '{}_texture'.format(self.obj_name)
         self.texture_node = self.texture.node_tree.nodes
 
@@ -48,9 +43,11 @@ class TextureHandler(object):
         self.material.texture_slots[0].texture_coords = 'ORCO'
         self.material.use_textures[0] = True
 
+        # Bump Map for Walls
         if self.displace:
 
-            self.displace_texture = TEXTURE_DISPLACE.copy()
+            # Random Displace node created already  in Blender (env.blend)
+            self.displace_texture = bpy.data.textures['random_displace'].copy()
             self.displace_node = self.displace_texture.node_tree.nodes
             self.material.texture_slots.add()
             self.material.texture_slots[1].texture = self.displace_texture
@@ -107,8 +104,7 @@ class TextureHandler(object):
     def random_translate(self, node):
         nodes = find_nodes(node, 'Translate')
         for node in nodes:
-
-            node.inputs[1].default_value = (random.random() * SCALE, random.random() * SCALE, random.random() * SCALE) # turns
+            node.inputs[1].default_value = (random.random() * SCALE, random.random() * SCALE, random.random() * SCALE)
 
     def random_material_properties(self):
         self.material.emit = random.random()

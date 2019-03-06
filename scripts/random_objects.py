@@ -1,35 +1,35 @@
-import sys, os, bpy
-
-sys.path.append(os.path.join(os.getcwd(), 'scripts'))
-from utils import import_object
-
-
-YCB_PATH = 'objects/ycb'
-NAMES = os.listdir(YCB_PATH)
-
-NAMES = list(filter(lambda x : 'cup' not in x and 'mug' not in x and 'bowl' not in x, NAMES))
-
-PATHS = [os.path.join(YCB_PATH, name, 'google_16k/textured.obj') for name in NAMES]
-
+import os
+import bpy
 import random
-import numpy as np
+from scripts.utils import import_object, YCB_PATH, RANDOM_NAMES
 
-class NoiseObjectsRandomizer(object):
 
-    def __init__(self, random_names, object_paths=PATHS, names=NAMES):
+def get_ycb_paths():
+
+    names = os.listdir(YCB_PATH)
+    names = list(filter(lambda x : 'cup' not in x and 'mug' not in x and 'bowl' not in x, names))
+    paths = [os.path.join(YCB_PATH, name, 'google_16k/textured.obj') for name in names]
+    return (names, paths)
+
+
+class ClutterObjectsRandomizer(object):
+
+    def __init__(self):
 
         self.noise_objs = []
-        self.random_names = random_names
+        self.random_names = RANDOM_NAMES
         object_names = [obj.name for obj in list(bpy.data.objects)]
 
-        for i, path in enumerate(object_paths):
+        ycb_names, ycb_paths = get_ycb_paths()
 
-            if not names[i] in object_names:
-                obj = import_object(path, names[i])
+        for i, path in enumerate(ycb_paths):
+
+            if not ycb_names[i] in object_names:
+                obj = import_object(path, ycb_names[i])
                 obj.layers[2] = True
                 obj.layers[0] = False
                 obj.scale = (7, 7, 7)
-                obj.name = names[i]
+                obj.name = ycb_names[i]
                 obj.rotation_euler[0] = 0
             else:
                 self.noise_objs.append(bpy.data.objects[object_names[i]])
@@ -76,5 +76,4 @@ class NoiseObjectsRandomizer(object):
 
 
 if __name__ == "__main__":
-    random_names = ['random1', 'random2', 'random3', 'random4', 'random5', 'random6']
-    nr = NoiseObjectsRandomizer(random_names)
+    nr = ClutterObjectsRandomizer()

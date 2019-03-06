@@ -1,18 +1,18 @@
-import bpy
 import random
-
 import sys
 import os
 import argparse
-sys.path.append(os.path.join(os.getcwd(), 'scripts'))
-
-from texture_random import TextureRandomizer
-from camera_position import CameraRandomizer
-from table_setting import TableSettingRandomizer
-from utils import initialize_environment
-from renderer import Renderer
-from logger import Logger
 import time
+import bpy
+
+sys.path.append(os.getcwd())
+
+from scripts.texture_random import TextureRandomizer
+from scripts.camera_position import CameraRandomizer
+from scripts.table_setting import TableSettingRandomizer
+from scripts.utils import blender_to_object_mode, ENV_OBJECT_NAMES, RANDOM_NAMES
+from scripts.renderer import Renderer
+from scripts.logger import Logger
 
 argv = sys.argv
 if "--" not in argv:
@@ -22,7 +22,8 @@ else:
 
 parser = argparse.ArgumentParser()
 parser.add_argument('--num-samples', type=int, default=10)
-parser.add_argument('--num-cups', type=int, default=1)
+parser.add_argument('--two-cups', dest='two_cups', action='store_true')
+parser.set_defaults(two_cups=False)
 
 parser.add_argument('--folder', type=str, default='test')
 
@@ -47,7 +48,7 @@ def create_folder(directory, debug):
     elif not debug:
         raise Exception('Folder exist already')
 
-def empty_memory():
+def empty_blender_memory():
 
     for block in bpy.data.meshes:
         if block.users == 0:
@@ -64,80 +65,84 @@ def empty_memory():
 
 def main(args):
 
-    do_affordance = args.affordance
-    do_depth = args.depth
-    debug = args.debug
+    if args.debug:
+        random.seed(10)
 
     folder_path = os.path.join('samples', args.folder)
     img_path = os.path.join(folder_path, 'images')
     affordance_path = os.path.join(folder_path, 'affordances')
     depth_path = os.path.join(folder_path, 'depths')
 
-    create_folder(folder_path, debug)
-    create_folder(img_path, debug)
-    create_folder(affordance_path, debug)
-    create_folder(depth_path, debug)
+    create_folder(folder_path, args.debug)
+    create_folder(img_path, args.debug)
 
-    cup_names = []
-    inside_names = []
+    if (args.affordance):
+        create_folder(affordance_path, args.debug)
 
-    for i in range(1, args.num_cups + 1):
-       cup_names.append('cup_{}'.format(i))
-       inside_names.append('inside_{}'.format(i))
+    if (args.depth):
+        create_folder(depth_path, args.debug)
 
-    random_names = [
-          'random1', 'random2', 'random3', 'random4', 'random5',
-          'random6', 'random7', 'random8', 'random9', 'random10']
-    textures = ['desk', 'wall', 'leg', 'floor'] + cup_names + inside_names + random_names
+    cup_names = ['cup_1']
+    inner_names = ['inside_1']
 
-    if debug:
-        random.seed(10)
+    if (args.two_cups):
+        cup_names.append('cup_2')
+        inner_names.append('inside_2')
 
-    initialize_environment()
 
-    setting_randomizer = TableSettingRandomizer(cup_names, inside_names, random_names)
+    # Change the Blender UI to the right mode
+    blender_to_object_mode()
+
+    table_randomizer = TableSettingRandomizer(cup_names, inner_names)
+
+    textures = ENV_OBJECT_NAMES + cup_names + inner_names + RANDOM_NAMES
     texture_randomizer = TextureRandomizer(textures)
-    camera_randomizer = CameraRandomizer(bpy.data.objects['Camera'], bpy.data.objects[cup_names[0]]) # TODO: multiple cups?
-    renderer = Renderer(img_path, depth_path, affordance_path, cup_names, inside_names, texture_randomizer,
-                        randomizer_depth=do_depth)
 
-    print(folder_path)
-    logger = Logger(setting_randomizer, camera_randomizer, folder_path, cup_names[0])
-    num_failures = 0
+    camera_randomizer = CameraRandomizer(bpy.data.objects['Camera'], bpy.data.objects[cup_names[0]], args.two_cups)
+
+    renderer = Renderer(img_path, depth_path, affordance_path, cup_names, inner_names, texture_randomizer, include_depth=args.depth)
+
+    logger = Logger(table_randomizer, camera_randomizer, folder_path, cup_names[0])
     start = time.time()
+    num_failures = 0
+
+    print("Rendering {} samples".format(args.num_samples))
 
     for i in range(args.num_samples):
 
         success = False
 
         while not success:
-            print('Table Setting randomizer')
-            setting_randomizer.randomize_all()
-            print('Camera randomizer')
+            # Table Setting randomizer
+            table_randomizer.randomize_all()
+            # Camera randomizer
             success = camera_randomizer.change_camera_position()
             if not success:
                 print('Table and camera failed')
                 num_failures += 1
 
-        print('Logging')
+        # Saving the current table setting to the csv
         logger.log()
 
         # Random Textures
-        print('Random textures')
         renderer.switch_to_random_textures()
+
+        # Render  RGB(-D)
         renderer.render_save()
 
         # Affordance labels
-        if do_affordance:
+        if args.affordance:
             print('Affordance')
             renderer.switch_to_labels()
             renderer.render_save()
 
-        empty_memory()
+        # Remove lamps etc
+        empty_blender_memory()
 
     end = time.time()
     print('num_failures', num_failures)
     print('time', end - start)
+
 
 if __name__ == "__main__":
 

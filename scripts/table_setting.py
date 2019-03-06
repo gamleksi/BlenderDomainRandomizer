@@ -1,32 +1,28 @@
 import bpy
 import random
-import sys
-import os
 import numpy as np
-sys.path.append(os.path.join(os.getcwd(), 'scripts'))
-# from scripts.utils import remove_object, set_parent, split_object, switch_origin, import_object
-from utils import remove_object, set_parent, split_object, switch_origin, import_object
-from design import CupRandomizer
-from random_objects import NoiseObjectsRandomizer
-from collision import check_collision
+from scripts.utils import remove_object, set_parent, split_object
+from scripts.design import CupRandomizer
+from scripts.random_objects import ClutterObjectsRandomizer
+from scripts.collision import check_collision
 
 
 class TableSettingRandomizer(object):
 
-    def __init__(self, cup_names, inside_names, random_names, max_num_lamps=8, desk_scale_limit=(2, 4), cup_scale_limit=(0.2, 0.4), lamp_pos_limit=(-8,8),
+    def __init__(self, cup_names, inner_names, max_num_lamps=8, desk_scale_limit=(2, 4), cup_scale_limit=(0.2, 0.4), lamp_pos_limit=(-8,8),
                 lamp_height_limit=(3, 10)):
 
         self.desk_scale_limit = desk_scale_limit
         self.desk = bpy.data.objects['desk']
 
         self.cup_scale_limit = cup_scale_limit
-        self.cup_randomizer = CupRandomizer(cup_names, inside_names)
+        self.cup_randomizer = CupRandomizer(cup_names, inner_names)
         self.cups = self.cup_randomizer.generate_designs()
 
         self.random_cup_position()
         self.random_cup_scale()
 
-        self.noise_randomizer = NoiseObjectsRandomizer(random_names)
+        self.clutter_randomizer = ClutterObjectsRandomizer()
 
         self.lamp_pos_limit = lamp_pos_limit
         self.lamp_height_limit = lamp_height_limit
@@ -48,7 +44,7 @@ class TableSettingRandomizer(object):
         self.cups = self.cup_randomizer.generate_designs()
         self.random_cup_scale()
         self.random_cup_position()
-        self.random_noise_objects()
+        self.random_clutter_objects()
 
     def random_desk_scale(self):
 
@@ -118,15 +114,8 @@ class TableSettingRandomizer(object):
 
                 collision = check_collision(self.cups[idx], self.cups[0])
 
-                # More than two cups exist
-#                if not(collision):
-#                    for idx in range(2, len(self.cups)):
-#                        collision = check_collision(obj, self.cups[idx])
-#                        if (collision):
-#                            break
 
-
-    def random_noise_objects(self):
+    def random_clutter_objects(self):
 
         desk_mw = np.array([self.desk.matrix_world])
         corner_coords = desk_mw @ np.array([1, 1, 0, 1])
@@ -134,7 +123,7 @@ class TableSettingRandomizer(object):
         y_max = corner_coords[0][1] * 0.7
 
         # Sets the random number of clutter objects on the table
-        noise_objects = self.noise_randomizer.generate()
+        noise_objects = self.clutter_randomizer.generate()
 
         for obj in noise_objects:
 
@@ -154,7 +143,7 @@ class TableSettingRandomizer(object):
                 # Checks the first cup collision
                 collision = check_collision(obj, self.cups[0])
 
-                # If collision not occudered, check a collision with a next cup
+                # If collision not occudered, check a collision with rest of the cups
                 if not(collision):
                     for idx in range(1, len(self.cups)):
                         collision = check_collision(obj, self.cups[idx])
@@ -166,5 +155,4 @@ if __name__ == "__main__":
 
     cup_names = ['cup_1']
     inside_names = ['inside_1']
-    random_names = ['random1', 'random2', 'random3', 'random4', 'random5', 'random6']
-    setting_randomizer = TableSettingRandomizer(cup_names, inside_names, random_names)
+    setting_randomizer = TableSettingRandomizer(cup_names, inside_names)

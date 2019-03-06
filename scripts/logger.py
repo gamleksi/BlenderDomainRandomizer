@@ -44,7 +44,7 @@ class Logger(object):
         desk_location = self.obj_pos(self.table_randomizer.desk)
         desk_scale = self.obj_scale(self.table_randomizer.desk)
 
-        random_objects, random_objs_ids = self.table_randomizer.noise_randomizer.get_info()
+        random_objects, random_objs_ids = self.table_randomizer.clutter_randomizer.get_info()
         random_objs_locations, random_objs_scales = self.objects_location_and_scale(random_objects)
 
         design_coefs = self.table_randomizer.cup_randomizer

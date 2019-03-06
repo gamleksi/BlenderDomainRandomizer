@@ -1,19 +1,18 @@
 import random
-import bpy
 import numpy as np
 import mathutils
+import bpy
 from bpy_extras.object_utils import world_to_camera_view
 
-CAMERA_Z_UPPER_LIMIT = 4
-CAMERA_X_LIMIT = [1.5, 3]
-ANGLE_LIMIT = [0.7, np.pi/2]
+from scripts.utils import CAMERA_Z_UPPER_LIMIT, CAMERA_X_LIMIT
 
 
 class CameraRandomizer(object):
 
-    def __init__(self, camera, parent_cup):
+    def __init__(self, camera, parent_cup, two_cups_env):
         self.camera = camera
         self.parent_cup = parent_cup
+        self.two_cups_env = two_cups_env
         self.reset_camera_position()
 
     def north_coord_limit(self, cup_coords, camera_coord):
@@ -136,11 +135,13 @@ class CameraRandomizer(object):
         cup_coords = [np.array(mw * v.co) for v in cup.data.vertices] # Global coordinates of vertices
 
         # second cup
-        cup2 = bpy.context.scene.objects['cup_2']
-        mw = cup2.matrix_world
-        cup_coords2 = [np.array(mw * v.co) for v in cup2.data.vertices] # Global coordinates of vertices
+        if (self.two_cups_env):
 
-        cup_coords = cup_coords + cup_coords2
+            cup2 = bpy.context.scene.objects['cup_2']
+            mw = cup2.matrix_world
+            cup_coords2 = [np.array(mw * v.co) for v in cup2.data.vertices] # Global coordinates of vertices
+
+            cup_coords = cup_coords + cup_coords2
 
         camera_coord = self.camera.location
 

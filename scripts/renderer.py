@@ -3,7 +3,7 @@ import bpy
 class Renderer(object):
 
     def __init__(self, random_texture_path, depth_path, affordance_path, cup_names, cup_insides, texture_randomizer,
-                 randomizer_depth=True, depth_name='depth', img_name='image', affordance_name='affordance'):
+                 include_depth=True, depth_name='depth', img_name='image', affordance_name='affordance'):
 
         self.affordance_path = affordance_path
         self.depth_path = depth_path
@@ -22,7 +22,7 @@ class Renderer(object):
         self.initialize_material_ids()
 
         self.affordance_material = False
-        self.randomizer_depth = randomizer_depth
+        self.include_depth = include_depth
 
     def render_save(self):
 
@@ -46,7 +46,7 @@ class Renderer(object):
 
         rl = tree.nodes.new(type="CompositorNodeRLayers")
 
-        if not self.affordance_material and self.randomizer_depth:
+        if not self.affordance_material and self.include_depth:
 
             mapValue = tree.nodes.new(type='CompositorNodeMapValue')
             mapValue.use_max = True; mapValue.use_min = True;

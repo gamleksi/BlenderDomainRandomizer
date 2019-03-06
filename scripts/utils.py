@@ -1,9 +1,15 @@
 import bpy
 import bmesh
 import numpy as np
-
 from bpy_extras.object_utils import world_to_camera_view
 import mathutils
+
+
+'''
+ Most of the Blender functions are designed for GUI, even though they can be called with python.
+ Hence, in the most of the cases, we needed to operate in 'GUI' level (selecting / deselecting objects or edges,
+ changing UI mode. Functions that operate in that level can be found in this file.      
+'''
 
 def coordinate_within_image(coord):
     coord = mathutils.Vector(coord)
@@ -18,7 +24,7 @@ def coordinate_within_image(coord):
     return within_image
 
 
-def initialize_environment():
+def blender_to_object_mode():
     bpy.ops.object.select_all(action = 'DESELECT')
     bpy.ops.object.mode_set(mode="EDIT")
     bpy.ops.mesh.select_all(action='DESELECT')
@@ -30,7 +36,6 @@ def deselected_all():
 
 
 def remove_object(obj):
-
     deselected_all()
     obj.select = True
     bpy.ops.object.delete()
@@ -41,9 +46,9 @@ def set_parent(parent, child, vertex_parenting=False):
     deselected_all()
 
     parent.select = True
-    child.select = True     #select the object for the 'parenting'
+    child.select = True     # select the object for the 'parenting'
 
-    bpy.context.scene.objects.active = parent    #the active object will be the parent of all selected object
+    bpy.context.scene.objects.active = parent    # the active object will be the parent of all selected object
 
     if vertex_parenting:
         bpy.ops.object.parent_set(type='VERTEX')
@@ -184,3 +189,18 @@ def split_object(obj, splitted_name, choose_edge=highest_edge):
     inner.name = splitted_name
 
     bpy.ops.object.select_all(action='DESELECT')
+
+
+# ENV DEPENDENT VALUES
+
+YCB_PATH = "objects/ycb" # Path to the ycb files
+
+# Include more names to the list, if you want more clutter objects on the table
+RANDOM_NAMES = ['random1', 'random2', 'random3', 'random4', 'random5', 'random6', 'random7', 'random8', 'random9', 'random10']
+
+# Rest of the environment objects
+ENV_OBJECT_NAMES = ['desk', 'wall', 'leg', 'floor']
+
+# Camera pose parameters
+CAMERA_Z_UPPER_LIMIT = 4
+CAMERA_X_LIMIT = [1.5, 3]

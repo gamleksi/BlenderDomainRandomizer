@@ -20,26 +20,32 @@ if "--" not in argv:
 else:
    argv = argv[argv.index("--") + 1:]
 
-parser = argparse.ArgumentParser()
-parser.add_argument('--num-samples', type=int, default=10)
-parser.add_argument('--two-cups', dest='two_cups', action='store_true')
+
+parser = argparse.ArgumentParser(description='Blender Affordance Domain Randomizer')
+
+parser.add_argument('--num-samples', type=int, default=10, help='Number of samples')
+parser.add_argument('--two-cups', dest='two_cups', action='store_true', help='Include two cups')
 parser.set_defaults(two_cups=False)
 
-parser.add_argument('--folder', type=str, default='test')
+parser.add_argument('--folder', type=str, default='test', help='Save samples to the folder')
 
-parser.add_argument('--affordance', dest='affordance', action='store_true')
-parser.add_argument('--no-affordance', dest='affordance', action='store_false')
+parser.add_argument('--no-affordance', dest='affordance', action='store_false', help='ignore affordance')
 parser.set_defaults(affordance=True)
 
-parser.add_argument('--depth', dest='depth', action='store_true')
-parser.add_argument('--no-depth', dest='depth', action='store_false')
+parser.add_argument('--no-depth', dest='depth', action='store_false', help='ignore depth')
 parser.set_defaults(depth=True)
 
-parser.add_argument('--debug', dest='debug', action='store_true')
-parser.add_argument('--no-debug', dest='debug', action='store_false')
+parser.add_argument('--debug', dest='debug', action='store_true', help='debug mode')
 parser.set_defaults(debug=False)
 
+parser.add_argument('--tips', dest='tips', action='store_true', help='Show this help message')
+parser.set_defaults(tips=False)
+
 args = parser.parse_args(argv)
+
+
+
+
 
 
 def create_folder(directory, debug):
@@ -146,13 +152,16 @@ def main(args):
 
 if __name__ == "__main__":
 
-   sys.path.append(os.getcwd())
-   if args.debug:
-      import cProfile
-      cProfile.run("main(args)", "blender.prof")
-      import pstats
-      p = pstats.Stats("blender.prof")
-      p.sort_stats("cumulative").print_stats(20)
-   else:
-      main(args)
+    sys.path.append(os.getcwd())
 
+    if (args.tips):
+        parser.print_help()
+    elif(args.debug):
+        import cProfile
+        cProfile.run("main(args)", "blender.prof")
+        import pstats
+        p = pstats.Stats("blender.prof")
+        p.sort_stats("cumulative").print_stats(20)
+
+    else:
+        main(args)

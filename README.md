@@ -66,7 +66,7 @@ We utilized it to randomize the textures and the bump maps of the scene.
 
 Figures below show the node structure of the texture randomizer:
 
-![A light source environment](images/node_textures.png?raw=true "Bump Map randomizer")
+![A light source environment](images/node_textures.png?raw=true "Texture randomizer")
 
 #### Two Blender's texture models, Checker and Distorted Noise, were merged. The initial pattern of Checker and Distorted Noise were modified with size and distortion values. The two colors of the texture models were given by the ColorRamp nodes. Fac values of the ColorRamp nodes determine produced colors. Scaling, Translate, Rotate, and Darken operations modified the merged texture. The transformation and color values of the nodes were modified through Blender's Python API for each sample. In addition, Diffuse reflection, Transfluecny, and Emit values of the objects were randomized.
 
@@ -76,7 +76,7 @@ Figure below shows the bum map node tree structure, which was built similarly as
 
 To obtain affordance labeled images, textures of the objects were switched to correspond to their affordances. The affordance textures were generated with Blender's Node Editor. A class id was determined for each object. For the clutter objects, the walls, the floor and the table, the class id was 0. For outer part of the mug, the class id was 1 and the inner part was 2. Figure below shows the structure of the node tree. 
 
-![A light source environment](images/nodes.png?raw=true "Affordances")
+![A light source environment](images/nodes.png?raw=true "Affordance texture")
 
 #### The object info node gives the class id of an object to the ColorRamp node that determines a texture color based on the class id. This color represents the affordance of the object or its part. Here, the black texture represents the background objects, the blue texture represents the wrap-grasp affordance, and the white represents the contain affordance. Eliminating the reflection of the affordance materials and removing anti-aliasing of the rendering options, enabled affordance textures to be considered as pixel-level labels.
 
